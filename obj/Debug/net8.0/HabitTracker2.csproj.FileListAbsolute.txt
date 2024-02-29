@@ -1,0 +1,14 @@
+G:\msvprojec\HabitTracker2\bin\Debug\net8.0\HabitTracker2.exe
+G:\msvprojec\HabitTracker2\bin\Debug\net8.0\HabitTracker2.deps.json
+G:\msvprojec\HabitTracker2\bin\Debug\net8.0\HabitTracker2.runtimeconfig.json
+G:\msvprojec\HabitTracker2\bin\Debug\net8.0\HabitTracker2.dll
+G:\msvprojec\HabitTracker2\bin\Debug\net8.0\HabitTracker2.pdb
+G:\msvprojec\HabitTracker2\obj\Debug\net8.0\HabitTracker2.GeneratedMSBuildEditorConfig.editorconfig
+G:\msvprojec\HabitTracker2\obj\Debug\net8.0\HabitTracker2.AssemblyInfoInputs.cache
+G:\msvprojec\HabitTracker2\obj\Debug\net8.0\HabitTracker2.AssemblyInfo.cs
+G:\msvprojec\HabitTracker2\obj\Debug\net8.0\HabitTracker2.csproj.CoreCompileInputs.cache
+G:\msvprojec\HabitTracker2\obj\Debug\net8.0\HabitTracker2.dll
+G:\msvprojec\HabitTracker2\obj\Debug\net8.0\refint\HabitTracker2.dll
+G:\msvprojec\HabitTracker2\obj\Debug\net8.0\HabitTracker2.pdb
+G:\msvprojec\HabitTracker2\obj\Debug\net8.0\HabitTracker2.genruntimeconfig.cache
+G:\msvprojec\HabitTracker2\obj\Debug\net8.0\ref\HabitTracker2.dll
