@@ -1,13 +1,11 @@
 ﻿using System.Globalization;
 using Microsoft.Data.Sqlite;
-// Read();
-// Insert();
-// Update();
-// Delete();
+// This app is used to reinforce my SQL knowledge
 
 string connectionString = @"Data Source=HabitTracker.db";
-List<Habits> tableData = new();
-string[] habitInfo;
+List<Habits> habitsData = new();
+List<Records> recordData = new();
+string[] habitInfo = new string[2];
 
 using (var connection = new SqliteConnection(connectionString))
 {
@@ -72,7 +70,7 @@ string[] ChooseHabit()
 
 void ShowMenu()
 {
-    ChooseHabit();
+    habitInfo = ChooseHabit();
     Console.WriteLine("HABIT TRACKER");
     Console.WriteLine("--------------");
     Console.WriteLine("1. Show all records");
@@ -85,10 +83,10 @@ void ShowMenu()
     switch (userInput)
     {
         case "1":
-            // GetAllRecords();
+            GetAllRecords(habitInfo);
             break;
         case "2":
-            Insert();
+            Insert(habitInfo);
             break;
         case "3":
             // Update();
@@ -147,7 +145,7 @@ void GetAllHabits(string readLine = "")
         {
             while (reader.Read())
             {
-                tableData.Add(new Habits
+                habitsData.Add(new Habits
                 {
                     Id = reader.GetInt32(0),
                     Habit = reader.GetString(1),
@@ -159,11 +157,11 @@ void GetAllHabits(string readLine = "")
             Console.WriteLine("No habits found.");
 
         connection.Close();
-        if (tableData.Count > 0)
+        if (habitsData.Count > 0)
         {
             Console.WriteLine("------------");
 
-            foreach (var habit in tableData)
+            foreach (var habit in habitsData)
             {
                 Console.WriteLine($"{habit.Id} - {habit.Habit} - {habit.Measurement}");
             }
@@ -173,7 +171,55 @@ void GetAllHabits(string readLine = "")
     }
 }
 
-void Insert()
+void GetAllRecords(string[] habitInfo)
+{
+    using (var connection = new SqliteConnection(connectionString))
+    {
+        connection.Open();
+
+        var tableCmd = connection.CreateCommand();
+        tableCmd.CommandText = "SELECT * FROM Records";
+        habitsData.Clear();
+
+        SqliteDataReader reader = tableCmd.ExecuteReader();
+
+        if (reader.HasRows)
+        {
+            while (reader.Read())
+            {
+                recordData.Add(new Records
+                {
+                    Id = reader.GetInt32(0),
+                    Habit = reader.GetString(1),
+                    Date = DateTime.ParseExact(reader.GetString(2), "dd-MM-yy", new CultureInfo("en-US")),
+                    Quantity = reader.GetInt32(3)
+                });
+            }
+        }
+        else
+            Console.WriteLine("No records found");
+
+        connection.Close();
+        if (recordData.Count > 0)
+        {
+            Console.WriteLine("--------------");
+
+            foreach (var record in recordData)
+            {
+                foreach (var habit in habitsData)
+                {
+                    if (habitInfo[0] == record.Habit)
+                        Console.WriteLine($"{record.Id} - {record.Habit} - {record.Date} - {habitInfo[1]}:{record.Quantity}");
+                }
+
+            }
+            Console.WriteLine("----------------");
+        }
+        Console.ReadLine();
+    }
+}
+
+void Insert(string[] habitInfo)
 {
     string date = GetDateInput();
     int quantity = GetNumInput($"Type the amount of {habitInfo[1]} you want to insert: ");
@@ -184,6 +230,63 @@ void Insert()
         var tableCmd = connection.CreateCommand();
 
         tableCmd.CommandText = $"INSERT INTO Records(habit, date, quantity) VALUES('{habitInfo[0]}', '{date}', '{quantity}')";
+
+        tableCmd.ExecuteNonQuery();
+
+        connection.Close();
+    }
+}
+
+void Update(string[] habitInfo)
+{
+    GetAllRecords(habitInfo);
+    if (recordData.Count > 0)
+    {
+        var recordId = GetNumInput("Type the ID of the record you want to update: ");
+        using (var connection = new SqliteConnection(connectionString))
+        {
+            connection.Open();
+
+            var checkCmd = connection.CreateCommand();
+            checkCmd.CommandText = $"SELECT EXISTS(SELECT 1 FROM Records WHERE Id = {recordId})";
+            int checkQuery = Convert.ToInt32(checkCmd.ExecuteScalar());
+
+            if (checkQuery == 0)
+            {
+                Console.WriteLine($"Record with Id {recordId} doesn't exist.");
+                Console.ReadLine();
+                connection.Close();
+                Update(habitInfo);
+            }
+
+            string date = GetDateInput();
+
+            int quantity = GetNumInput("Enter the quantity");
+
+            var tableCmd = connection.CreateCommand();
+
+            tableCmd.CommandText = @$"UPDATE Records SET date = '{date}', quantity = '{quantity}' WHERE Id = {recordId}";
+
+            tableCmd.ExecuteNonQuery();
+
+            connection.Close();
+        }
+    }
+    else
+        Console.WriteLine("No records found");
+}
+
+void Delete()
+{
+    var recordId = GetNumInput("Type the ID of the record you want to delete");
+
+    using(var connection = new SqliteConnection(connectionString))
+    {
+        connection.Open();
+
+        var tableCmd = connection.CreateCommand();
+
+        tableCmd.CommandText = $"DELETE FROM Habits WHERE Id = {recordId}";
 
         tableCmd.ExecuteNonQuery();
 
@@ -215,7 +318,7 @@ void CreateHabit()
 void DeleteHabit()
 {
     GetAllHabits("Show habits");
-    if (tableData.Count > 0)
+    if (habitsData.Count > 0)
     {
         var recordID = GetNumInput("Type the id of the habit you want to delete");
 
@@ -234,8 +337,8 @@ void DeleteHabit()
             }
 
             Console.WriteLine($"Record with ID {recordID} has been deleted.");
-            Habits habitId = tableData.ElementAt<Habits>(recordID);
-            tableData.Remove(habitId);
+            Habits habitId = habitsData.ElementAt<Habits>(recordID);
+            habitsData.Remove(habitId);
             ShowMainMenu();
         }
     }
@@ -256,13 +359,14 @@ string[] GetHabitInfo(string habit)
         {
             using (SqliteDataReader reader = command.ExecuteReader())
             {
-                for (int i = 0; i < reader.FieldCount; i++)
+                while (reader.Read())
                 {
-                    if (i == habitId)
-                    {
-                        habitInfo[0] = reader.GetString(i);
-                        habitInfo[1] = reader.GetString(i+1);
-                    }
+                    for (int i = 0; i <= habitId; i++)
+                        if (i == habitId)
+                        {
+                            habitInfo[0] = reader.GetString(i);
+                            habitInfo[1] = reader.GetString(i + 1);
+                        }
 
                 }
             }
